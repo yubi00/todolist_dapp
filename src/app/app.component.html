@@ -1,0 +1,13 @@
+<div class="main">
+  <h1>TodoList Items</h1>
+  <div class="addItem">
+      <input [(ngModel)] = "newItem" type="text" placeholder="add new item"/>
+      <button (click) = "addItem()">Add</button>
+  </div>
+    <ul>
+      <li *ngFor = "let i of items; let ind = index">
+        {{i}}
+        <span (click) = "deleteItem(ind)">X</span>
+      </li>
+    </ul>
+</div>
