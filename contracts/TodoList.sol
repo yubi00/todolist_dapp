@@ -1,9 +1,9 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.18;
 
 contract TodoList {
     
-    event addeditems(string message);
-    event deleteditems(string message);
+    event addedItems(string message);
+    event deletedItems(string message);
     event status(string message);
     
     struct Item {
@@ -21,9 +21,7 @@ contract TodoList {
         _; 
     }
     
-    function changeAdmin(address newAdmin)
-    onlyAdmin
-    {
+    function changeAdmin(address newAdmin) onlyAdmin {
         require(newAdmin != 0x0);
         admin = newAdmin;
     }
@@ -32,64 +30,121 @@ contract TodoList {
         admin = msg.sender; 
     }
     
-    function addItem(bytes32 itemname) returns (bool success){
-        if(findItem(itemname) == false) {
-            items[indexes.length].itemname = itemname;
-            items[indexes.length].itemindex = indexes.length;
-
-            emit addeditems("new item added"); 
+    function addItem(string itemname) returns (bool success){
+        if(findItem(stringToBytes32(itemname)) == false) {
+            items[indexes.length].itemname = stringToBytes32(itemname);
+            items[indexes.length].itemindex = (indexes.length);
+             addedItems("new item added");
             indexes.push(indexes.length); 
         }
-        emit status("item already exist");
+         status("item already exist"); 
         return false;
     }
     
     function deleteItem(uint index) returns (bool success) {
-        if(findItembyIndex(index) == true) {
+        if ( findItembyIndex(index) == true ) {
             Item storage lastiteminthelist = items[indexes.length - 1];
             lastiteminthelist.itemindex = index; 
             items[index] = lastiteminthelist;
             indexes.length--; 
             
-            emit deleteditems("selected item deleted successfully");
+             deletedItems("selected item deleted successfully");
             return true; 
         }
-        emit status("item could not deleted");
+         status("item could not deleted");
         return false;
     }
     
     function findItembyIndex(uint index) returns (bool) {
         for(uint i=0; i<indexes.length; i++) {
             if(items[i].itemindex == index) {
-                emit status("item found");
+                 status("item found");
                 return true; 
             }
         }
-        emit status("item not found");
+         status("item not found");
         return false; 
     }
     
     function findItem(bytes32 name) returns (bool) {
         for (uint i=0; i<indexes.length; i++) {
             if(items[i].itemname == name) {
-                emit status("item found");
+                 status("item found");
                 return true; 
             }
         }
-        emit status("item not found");
+         status("item not found");
         return false; 
     }
     
-    function getItem(uint index)  returns (bytes32 itemname) {
+    function getItem(uint index)  returns (string itemname) {
         if(findItembyIndex(index) == true) {
-            return items[index].itemname; 
+            return bytes32ToString(items[index].itemname); 
         }
-        emit status("item not in the list");
+         status("item not in the list");
     }
     
     function getTotalItems() returns (uint) {
         return indexes.length;
         
     }
+
+    /*
+	 *This is a helper function which is used to convert the given bytes32 to string which is later required when we want to retrieve the output as a string 
+	 *@param {bytes32} x
+	 * any bytes32 character
+	 *@return {string}
+	 */
+	function bytes32ToString(bytes32 x) constant returns(string) {
+		bytes memory bytesString = new bytes(32);
+		uint charCount = 0;
+		for (uint j = 0; j < 32; j++) {
+			byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
+			if (char != 0) {
+				bytesString[charCount] = char;
+				charCount++;
+			}
+		}
+		bytes memory bytesStringTrimmed = new bytes(charCount);
+		for (j = 0; j < charCount; j++) {
+			bytesStringTrimmed[j] = bytesString[j];
+		}
+		return string(bytesStringTrimmed);
+	}
+
+    /*
+	 *This is a helper function which converts string to bytes32
+	 *@param {string memory} source
+	 *string data type 
+	 *@return {bytes32} result
+	 *result in bytes32
+	 */
+	function stringToBytes32(string memory source) returns(bytes32 result) {
+		assembly {
+			result: = mload(add(source, 32))
+		}
+	}
+    
+    /*
+	 *This function kills the contract and the remaining funds of the contract is recovered back to the admin
+	 *
+	 */
+	function kill() {
+		if (msg.sender == admin) {
+			selfdestruct(admin);
+		}
+	}
+
+	/*
+	 *  This is a fallback function, which rejects any ether sent to it.It is good practise to include such a function for every contract
+	 * in order not to loose Ether.  
+	 *@return {}
+	 */
+
+	function() {
+		return;
+	}
+
+
     
 }
