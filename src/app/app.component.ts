@@ -25,6 +25,7 @@ export class AppComponent {
   constructor() {
     this.checkAndInstantiateWeb3();
     this.onReady();
+    this.displayItems();
     
   }
 
@@ -74,41 +75,69 @@ export class AppComponent {
       var newitem = new String(this.newItem);
       var addeditem = util.utf8ToHex(newitem);
       console.log("added item: "+addeditem);
-      var addeditems = [];
-
+     
       this.TodoList.deployed().then(function(contractinstance){
         contractinstance.addItem(addeditem,{gas: 200000, from: acc}).then(function(res){
           if(res) {
             console.log("new item added "+res.tx);
            alert("new item added");
-            contractinstance.getTotalItems.call().then(function(res){
-              var itemcount = parseInt(res);
-              alert("item count: "+itemcount);
-              for(var i=0; i<itemcount; i++){
-                contractinstance.getItem.call(i).then(function(result){ 
-                  if(result) {
-                    console.log("item name: "+result);
-                    addeditems.push(result);
-                  }
-                })
-              }
-              
-            })
-            
+           
           } 
         })
       })
+      .then(() => {
+        this.displayItems();
+        this.newItem = "";
+      })
+      .catch((e) => {
+        console.log(e);
+      })
       
-      this.items = addeditems; 
-      console.log("itemas added again: "+this.items);
-      this.newItem = "";
-      
+       
     }
-    
 
   }
 
   deleteItem = function(index) {
-    this.items.splice(index, 1);
+    var acc = this.web3.eth.coinbase; 
+    this.TodoList.deployed().then(function(contractinstance){
+      contractinstance.deleteItem(index, {gas: 200000, from: acc}).then(function(res){
+        console.log("item deleted ");
+      })
+     
+    })
+    .then(() => {
+      this.items.splice(index, 1);
+    })
+    .catch((e) => {
+      console.log(e);
+    })
+
+    
+    
   }
+
+  displayItems = function() {
+    var addeditems = [];
+    this.TodoList.deployed().then(function(contractinstance){
+      contractinstance.getTotalItems.call().then(function(res){
+        var itemcount = parseInt(res);
+        console.log("item count: "+itemcount);
+        for(var i=0; i<itemcount; i++){
+          contractinstance.getItem.call(i).then(function(result){ 
+            if(result) {
+              console.log("item name: "+result);
+              addeditems.push(result);
+            }
+          })
+        }
+        
+      })
+
+    })
+    this.items = addeditems; 
+    
+
+  }
+  
 }
