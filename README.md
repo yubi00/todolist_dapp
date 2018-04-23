@@ -3,6 +3,7 @@
 How to use
 
 1. Install truffle, Angular CLI and an Ethereum client as follows using npm: 
+
 npm install -g truffle
 npm install -g @angular/cli
 npm install -g ethereumjs-testrpc
