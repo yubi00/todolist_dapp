@@ -80,7 +80,7 @@ export class AppComponent {
         contractinstance.addItem(addeditem,{gas: 200000, from: acc}).then(function(res){
           if(res) {
             console.log("new item added "+res.tx);
-           alert("new item added");
+          
            
           } 
         })

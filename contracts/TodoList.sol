@@ -5,22 +5,34 @@ contract TodoList {
     event addedItems(string message);
     event deletedItems(string message);
     event status(string message);
-    
+
+    //struct Item holds an information about a particular todos
     struct Item {
         bytes32 itemname;
         uint itemindex;
     }
     
+    //items mapping stores the information about a particualr item list on the basis of its index
     mapping(uint => Item) items;
     uint[] indexes; //indexes array store the index of the mapping 
     
      address public admin;
 
+    /*
+	 *This is a special type of func called modifier which is used to restrict the execution of certain transaction, where the admin only have the rights to do so
+	 *
+	 */
     modifier onlyAdmin() {
         require(msg.sender == admin);
         _; 
     }
     
+    /*
+	 *only admin can change the ownership of the contract
+	 * @param {address} newAdmin
+	 * address of the admin 
+	 *
+	 */
     function changeAdmin(address newAdmin) onlyAdmin {
         require(newAdmin != 0x0);
         admin = newAdmin;
@@ -29,7 +41,11 @@ contract TodoList {
     function TodoList() {
         admin = msg.sender; 
     }
-    
+    /*
+	 *This function is used to add todo item list to the blockchain
+	 *@return {bool} success
+	 * true if succeed otherwise false
+	 */
     function addItem(bytes32 itemname) returns (bool success){
         if(findItem(itemname) == false) {
             items[indexes.length].itemname = itemname;
@@ -41,6 +57,11 @@ contract TodoList {
         return false;
     }
     
+    /*
+	 *This function is used to delete todo item list from the blockchain
+	 *@return {bool} success
+	 * true if succeed otherwise false
+	 */
     function deleteItem(uint index) returns (bool success) {
         if ( findItembyIndex(index) == true ) {
             Item storage lastiteminthelist = items[indexes.length - 1];
@@ -54,7 +75,13 @@ contract TodoList {
          status("item could not deleted");
         return false;
     }
-    
+    /*
+	 *This function checks if item already exist by its index
+	 * @param {uint} index
+	 * index of the item  in uint
+	 *@return {bool}
+	 *a boolean value
+	 */
     function findItembyIndex(uint index) returns (bool) {
         for(uint i=0; i<indexes.length; i++) {
             if(items[i].itemindex == index) {
@@ -65,7 +92,13 @@ contract TodoList {
          status("item not found");
         return false; 
     }
-    
+    /*
+	 *This function checks if item already exist by its name
+	 * @param {bytes32} name
+	 * name of the item  in uint
+	 *@return {bool}
+	 *a boolean value
+	 */
     function findItem(bytes32 name) returns (bool) {
         for (uint i=0; i<indexes.length; i++) {
             if(items[i].itemname == name) {
@@ -76,7 +109,13 @@ contract TodoList {
          status("item not found");
         return false; 
     }
-    
+    /*
+	 *This function retrieves the name of the todo list , provided the index of a item and is converted to string
+	 *@param {uint} index
+	 *index of the item
+	 *@return {string} itemname
+	 * name of the item
+	 */
     function getItem(uint index)  returns (string itemname) {
         if(findItembyIndex(index) == true) {
             return bytes32ToString(items[index].itemname); 
@@ -84,6 +123,11 @@ contract TodoList {
          status("item not in the list");
     }
     
+    /*
+	 *This function returns a number of todos added to the blockchain
+	 *@return {uint256} length
+	 *the number of items added to the blockchain
+	 */
     function getTotalItems() returns (uint) {
         return indexes.length;
         
