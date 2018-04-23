@@ -3,6 +3,7 @@ import {canBeNumber} from '../util/validation';
 const Web3 = require('web3');
 const contract = require('truffle-contract');
 const TodoListArtifacts = require('../../build/contracts/TodoList.json');
+var util = require('web3-utils');
 
 @Component({
   selector: 'app-root',
@@ -11,20 +12,20 @@ const TodoListArtifacts = require('../../build/contracts/TodoList.json');
 })
 export class AppComponent {
 
-  TodoList = contract(TodoListArtifacts);
+   TodoList = contract(TodoListArtifacts);
     account: any;
     accounts: any;
     web3: any;
     status: string; 
     
-  items = ["Angularjs", "Reactjs", "Vuejs"];
+  items: any;
 
   newItem = "";
 
   constructor() {
     this.checkAndInstantiateWeb3();
     this.onReady();
-    this.getItems();
+    
   }
 
   checkAndInstantiateWeb3() {
@@ -41,7 +42,7 @@ export class AppComponent {
         'here: http://truffleframework.com/tutorials/truffle-and-metamask');
       // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
       this.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
-      alert("ethereum client connected to localhost");
+      
     }
   }
 
@@ -66,46 +67,44 @@ export class AppComponent {
     });
   }
 
-  getItems = function() {
-  
-    this.TodoList.deployed().then(function(contractinstance){
-      contractinstance.getTotalItems.call().then(function(res){
-        var itemcount = parseInt(res);
-        alert("item count: "+itemcount);
-        for(var i=0; i<itemcount; i++){
-          contractinstance.getItem.call(i).then(function(error, result){ 
-            if(!error) {
-              console.log("item name: "+result);
-              console.log("\n");
-            }
-            else {
-              console.log(error);
-            }
-          })
-        }
-      })
-    })
-  }
 
   addItem = function() {
     if(this.newItem != "") {
+      var acc = this.web3.eth.coinbase; 
       var newitem = new String(this.newItem);
-      this.items.push(newitem);
+      var addeditem = util.utf8ToHex(newitem);
+      console.log("added item: "+addeditem);
+      var addeditems = [];
+
       this.TodoList.deployed().then(function(contractinstance){
-        contractinstance.addItem(newitem).then(function(err, res){
-          if(!err) {
+        contractinstance.addItem(addeditem,{gas: 200000, from: acc}).then(function(res){
+          if(res) {
+            console.log("new item added "+res.tx);
+           alert("new item added");
+            contractinstance.getTotalItems.call().then(function(res){
+              var itemcount = parseInt(res);
+              alert("item count: "+itemcount);
+              for(var i=0; i<itemcount; i++){
+                contractinstance.getItem.call(i).then(function(result){ 
+                  if(result) {
+                    console.log("item name: "+result);
+                    addeditems.push(result);
+                  }
+                })
+              }
+              
+            })
             
-            alert("new item added successfully");
-            
-          }
-          else {
-            console.log(err);
-          }
+          } 
         })
       })
       
+      this.items = addeditems; 
+      console.log("itemas added again: "+this.items);
+      this.newItem = "";
+      
     }
-    this.newItem = "";
+    
 
   }
 

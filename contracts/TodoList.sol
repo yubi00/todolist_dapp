@@ -30,9 +30,9 @@ contract TodoList {
         admin = msg.sender; 
     }
     
-    function addItem(string itemname) returns (bool success){
-        if(findItem(stringToBytes32(itemname)) == false) {
-            items[indexes.length].itemname = stringToBytes32(itemname);
+    function addItem(bytes32 itemname) returns (bool success){
+        if(findItem(itemname) == false) {
+            items[indexes.length].itemname = itemname;
             items[indexes.length].itemindex = (indexes.length);
              addedItems("new item added");
             indexes.push(indexes.length); 
